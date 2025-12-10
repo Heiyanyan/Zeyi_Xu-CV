@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Timeline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .title h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .title p {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    .timeline {
+      position: relative;
+      padding: 24px 0;
+      margin-left: 12px;
+    }
+
+    /* 中间竖线 */
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 120px;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(to bottom, #4b5563, #6b7280);
+      opacity: 0.7;
+    }
+
+    .timeline-item {
+      position: relative;
+      display: flex;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .timeline-date {
+      width: 120px;
+      text-align: right;
+      padding-right: 16px;
+      font-size: 14px;
+      color: #9ca3af;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+
+    .timeline-marker {
+      position: relative;
+      width: 24px;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    /* 圆点 */
+    .timeline-marker::before {
+      content: "";
+      position: relative;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+    }
+
+    /* 右侧内容卡片 */
+    .timeline-content {
+      flex: 1;
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), rgba(15, 23, 42, 0.96));
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(8px);
+    }
+
+    .item-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #e5e7eb;
+    }
+
+    .item-subtitle {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .item-tags {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .tag {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      color: #9ca3af;
+    }
+
+    /* 当前进行中的条目高亮 */
+    .ongoing .timeline-marker::before {
+      background: #f97316;
+      box-shadow: 0 0 0 4px rgba(248, 171, 95, 0.35);
+    }
+
+    .ongoing .timeline-content {
+      border-color: rgba(249, 115, 22, 0.8);
+    }
+
+    .ongoing-label {
+      display: inline-block;
+      margin-left: 6px;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(248, 171, 95, 0.6);
+      color: #fed7aa;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 640px) {
+      body {
+        padding: 24px 12px;
+      }
+
+      .timeline::before {
+        left: 92px;
+      }
+
+      .timeline-date {
+        width: 92px;
+        font-size: 12px;
+      }
+
+      .timeline-content {
+        padding: 12px 14px;
+      }
+
+      .item-title {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="title">
+      <h1>Research & Work Timeline</h1>
+      <p>Physical simulation · Graphics · Robotics · Generative characters</p>
+    </header>
+
+    <main class="timeline">
+      <!-- 2024.1-2024.5 (arxiv) Learning Physical Simulation with Historical Message-Passing Integration Transformer -->
+      <section class="timeline-item">
+        <div class="timeline-date">
+          2024.1 – 2024.5
+        </div>
+        <div class="timeline-marker"></div>
+        <article class="timeline-content">
+          <div class="item-title">
+            Learning Physical Simulation with Historical Message-Passing Integration Transformer
+          </div>
+          <div class="item-subtitle">
+            arXiv · Data-driven physical simulation
+          </div>
+          <div class="item-tags">
+            <span class="tag">Graph / Transformer</span>
+            <span class="tag">Physical Simulation</span>
+            <span class="tag">Message Passing</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- 2024.5-2025.3 sjtu Research Intern -->
+      <section class="timeline-item">
+        <div class="timeline-date">
+          2024.5 – 2025.3
+        </div>
+        <div class="timeline-marker"></div>
+        <article class="timeline-content">
+          <div class="item-title">
+            Research Intern · SJTU
+          </div>
+          <div class="item-subtitle">
+            CVPR 2025 · AMR-Transformer & Numerical Oil Painting
+          </div>
+          <div class="item-tags">
+            <span class="tag">AMR-Transformer</span>
+            <span class="tag">Neural Fluid Simulation</span>
+            <span class="tag">Long-range Interaction</span>
+            <span class="tag">Numerical Oil Painting</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- 2025.7-2025.9 TranscEngram Algorithm Intern -->
+      <section class="timeline-item">
+        <div class="timeline-date">
+          2025.7 – 2025.9
+        </div>
+        <div class="timeline-marker"></div>
+        <article class="timeline-content">
+          <div class="item-title">
+            Algorithm Intern · TranscEngram
+          </div>
+          <div class="item-subtitle">
+            Robot Indoor Navigation Program
+          </div>
+          <div class="item-tags">
+            <span class="tag">Robotics</span>
+            <span class="tag">Indoor Navigation</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- 2025.8-2025.10 HKU Research Assistant -->
+      <section class="timeline-item">
+        <div class="timeline-date">
+          2025.8 – 2025.10
+        </div>
+        <div class="timeline-marker"></div>
+        <article class="timeline-content">
+          <div class="item-title">
+            Research Assistant · HKU
+          </div>
+          <div class="item-subtitle">
+            Robot Indoor Navigation Program
+          </div>
+          <div class="item-tags">
+            <span class="tag">Robotics</span>
+            <span class="tag">SLAM / Planning</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- 2025.9-2025.11 MIT Remote intern -->
+      <section class="timeline-item">
+        <div class="timeline-date">
+          2025.9 – 2025.11
+        </div>
+        <div class="timeline-marker"></div>
+        <article class="timeline-content">
+          <div class="item-title">
+            Remote Intern · MIT
+          </div>
+          <div class="item-subtitle">
+            ICLR 2025 · Neural Modular Physics for Elastic Simulation
+          </div>
+          <div class="item-tags">
+            <span class="tag">Neural Modular Physics</span>
+            <span class="tag">Elastic Simulation</span>
+            <span class="tag">ICLR 2025</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- 2025.9-2026.2 meshy Research Scientist Intern -->
+      <section class="timeline-item ongoing">
+        <div class="timeline-date">
+          2025.9 – 2026.2
+        </div>
+        <div class="timeline-marker"></div>
+        <article class="timeline-content">
+          <div class="item-title">
+            Research Scientist Intern · meshy
+            <span class="ongoing-label">ongoing</span>
+          </div>
+          <div class="item-subtitle">
+            AI rigging & skinning · Low Poly Generation · GPU octree extraction
+          </div>
+          <div class="item-tags">
+            <span class="tag">AI Rigging</span>
+            <span class="tag">Skinning</span>
+            <span class="tag">Low Poly</span>
+            <span class="tag">GPU Parallel Octree</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- 2025.3-2025.12 NC paper -->
+      <section class="timeline-item">
+        <div class="timeline-date">
+          2025.3 – 2025.12
+        </div>
+        <div class="timeline-marker"></div>
+        <article class="timeline-content">
+          <div class="item-title">
+            NC Paper
+          </div>
+          <div class="item-subtitle">
+            Long-term project · details omitted here
+          </div>
+          <div class="item-tags">
+            <span class="tag">Research</span>
+            <span class="tag">Numerical Computing</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- 2025.12-present tau VAE -->
+      <section class="timeline-item ongoing">
+        <div class="timeline-date">
+          2025.12 – present
+        </div>
+        <div class="timeline-marker"></div>
+        <article class="timeline-content">
+          <div class="item-title">
+            τ-VAE
+            <span class="ongoing-label">ongoing</span>
+          </div>
+          <div class="item-subtitle">
+            Generative modeling project based on VAE variant τ-VAE
+          </div>
+          <div class="item-tags">
+            <span class="tag">VAE</span>
+            <span class="tag">Generative Modeling</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- 2025.12-present AI real-time virtual character -->
+      <section class="timeline-item ongoing">
+        <div class="timeline-date">
+          2025.12 – present
+        </div>
+        <div class="timeline-marker"></div>
+        <article class="timeline-content">
+          <div class="item-title">
+            AI Real-time Virtual Character
+            <span class="ongoing-label">ongoing</span>
+          </div>
+          <div class="item-subtitle">
+            Real-time interactive AI character system
+          </div>
+          <div class="item-tags">
+            <span class="tag">Real-time</span>
+            <span class="tag">Virtual Character</span>
+            <span class="tag">Interactive AI</span>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
