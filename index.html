@@ -2,390 +2,813 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>Timeline</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Research & Intern Timeline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
     }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      padding: 40px 16px;
+      background: #f4f5f7;
+      color: #222;
     }
 
-    .container {
-      width: 100%;
+    .page {
       max-width: 900px;
+      margin: 40px auto;
+      padding: 0 16px 60px;
     }
 
-    .title {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
-    .title h1 {
+    h1 {
       font-size: 28px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #e5e7eb;
+      font-weight: 600;
+      margin-bottom: 4px;
+      text-align: center;
     }
 
-    .title p {
-      margin-top: 8px;
+    .subtitle {
+      text-align: center;
+      color: #666;
       font-size: 14px;
-      color: #9ca3af;
+      margin-bottom: 24px;
+    }
+
+    .timeline-wrapper {
+      position: relative;
+      margin: 0 auto;
+      max-width: 760px;
+      height: 1600px; /* 超出一屏，可以滚动 */
+      padding: 24px 0;
     }
 
     .timeline {
       position: relative;
-      padding: 24px 0;
-      margin-left: 12px;
+      width: 100%;
+      height: 100%;
     }
 
-    /* 中间竖线 */
+    /* 中央时间轴 */
     .timeline::before {
       content: "";
       position: absolute;
-      left: 120px;
+      left: 50%;
+      transform: translateX(-50%);
       top: 0;
-      width: 2px;
-      height: 100%;
-      background: linear-gradient(to bottom, #4b5563, #6b7280);
-      opacity: 0.7;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(to bottom, #d7dde5, #c0c6d4);
     }
 
-    .timeline-item {
-      position: relative;
-      display: flex;
-      gap: 24px;
-      margin-bottom: 32px;
+    /* 时间刻度：公共样式 */
+    .time-tick {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      pointer-events: none;
     }
 
-    .timeline-date {
-      width: 120px;
-      text-align: right;
-      padding-right: 16px;
-      font-size: 14px;
-      color: #9ca3af;
-      line-height: 1.4;
-      flex-shrink: 0;
-    }
-
-    .timeline-marker {
-      position: relative;
-      width: 24px;
-      flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-    }
-
-    /* 圆点 */
-    .timeline-marker::before {
+    .time-tick::before {
       content: "";
-      position: relative;
-      top: 4px;
-      width: 12px;
-      height: 12px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 0;
+      background: #bbb;
     }
 
-    /* 右侧内容卡片 */
-    .timeline-content {
-      flex: 1;
-      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), rgba(15, 23, 42, 0.96));
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 16px;
-      padding: 16px 18px;
-      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(8px);
+    /* 年大刻度：粗一点 */
+    .time-tick-year::before {
+      width: 16px;
+      height: 3px;
+      background: #9ca3af;
     }
 
-    .item-title {
-      font-size: 16px;
+    /* 月小刻度：短一点、细一点 */
+    .time-tick-month::before {
+      width: 10px;
+      height: 1px;
+      background: #d1d5db;
+    }
+
+    /* 年份文字：超大号浅灰，叠在灰线位置 */
+    .time-tick-label-year {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 44px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: rgba(148, 163, 184, 0.28);
+    }
+
+    /* 月份文字：略小一点，同色系，标 YYYY.M */
+    .time-tick-label-month {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 26px;
       font-weight: 600;
-      margin-bottom: 4px;
-      color: #e5e7eb;
+      letter-spacing: 0.06em;
+      color: rgba(148, 163, 184, 0.40);
     }
 
-    .item-subtitle {
+    /* 彩色竖线本体 */
+    .event-line-core {
+      position: absolute;
+      width: 6px;
+      border-radius: 999px;
+      background: var(--color);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+      cursor: pointer;
+    }
+
+    /* 起止时间标签 */
+    .date-label {
+      position: absolute;
+      font-size: 10px;
+      color: #6b7280;
+      background: #f9fafb;
+      padding: 1px 4px;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+      white-space: nowrap;
+      opacity: 0.85;
+      cursor: pointer;
+    }
+
+    /* 卡片（项目介绍） */
+    .event-card {
+      position: absolute;
+      width: 260px;
+      border-radius: 6px;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 6px 10px;
+      transform: translateY(-50%);
+      z-index: 2;
+      cursor: pointer;
+      background: #ffffff;
+    }
+
+    /* 机构徽标行 */
+    .event-institutions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .inst-pill {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 23, 42, 0.15);
+      background: rgba(15, 23, 42, 0.06);
+      color: #111827;
+    }
+
+    .event-title {
       font-size: 13px;
-      color: #9ca3af;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .event-subtitle {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 2px;
+    }
+
+    .event-dates {
+      font-size: 11px;
+      color: #888;
+    }
+
+    /* 竖线到卡片的虚线 */
+    .leader-line {
+      position: absolute;
+      height: 0;
+      border-top: 1px dashed var(--color);
+      cursor: pointer;
+    }
+
+    /* 高亮/虚化的公共类 */
+    .event-piece {
+      transition: opacity 0.18s ease, transform 0.18s ease,
+                  box-shadow 0.18s ease, width 0.18s ease,
+                  border-color 0.18s ease, background-color 0.18s ease;
+    }
+
+    .event-piece.dimmed {
+      opacity: 0.18;
+    }
+
+    .event-card.active {
+      transform: translateY(-50%) scale(1.04);
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+      z-index: 30;
+    }
+
+    .event-line-core.active {
+      width: 8px;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
+    }
+
+    .leader-line.active {
+      border-top-style: solid;
+    }
+
+    .date-label.active {
+      opacity: 1;
+      font-weight: 600;
+    }
+
+    .detail-panel {
+      display: none;
+    }
+
+    /* 浮动详情框：放在时间轴两侧、偏外侧 */
+    .detail-floating {
+      position: absolute;
+      width: 260px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #e5e7eb;
+      border: 1px solid #d1d5db;
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 72px;
+      transform: translateY(-50%);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+      transition: background-color 0.18s ease, border-color 0.18s ease,
+                  box-shadow 0.18s ease, opacity 0.18s ease;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 50;
+    }
+
+    .detail-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .detail-subtitle {
+      font-size: 13px;
+      color: #4b5563;
+      margin-bottom: 2px;
+    }
+
+    .detail-dates {
+      font-size: 12px;
+      color: #6b7280;
       margin-bottom: 8px;
     }
 
-    .item-tags {
-      margin-top: 6px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      font-size: 12px;
+    .detail-body {
+      font-size: 13px;
+      color: #111827;
     }
 
-    .tag {
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      background: rgba(15, 23, 42, 0.8);
-      color: #9ca3af;
-    }
-
-    /* 当前进行中的条目高亮 */
-    .ongoing .timeline-marker::before {
-      background: #f97316;
-      box-shadow: 0 0 0 4px rgba(248, 171, 95, 0.35);
-    }
-
-    .ongoing .timeline-content {
-      border-color: rgba(249, 115, 22, 0.8);
-    }
-
-    .ongoing-label {
-      display: inline-block;
-      margin-left: 6px;
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      border: 1px solid rgba(248, 171, 95, 0.6);
-      color: #fed7aa;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    /* 移动端适配 */
-    @media (max-width: 640px) {
-      body {
-        padding: 24px 12px;
+    @media (max-width: 768px) {
+      .timeline-wrapper {
+        height: 1600px;
       }
 
-      .timeline::before {
-        left: 92px;
-      }
-
-      .timeline-date {
-        width: 92px;
-        font-size: 12px;
-      }
-
-      .timeline-content {
-        padding: 12px 14px;
-      }
-
-      .item-title {
-        font-size: 14px;
+      .event-card {
+        width: 220px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header class="title">
-      <h1>Research & Work Timeline</h1>
-      <p>Physical simulation · Graphics · Robotics · Generative characters</p>
-    </header>
+  <div class="page">
+    <h1>Timeline</h1>
+    <div class="subtitle">Research · Internships · Projects</div>
 
-    <main class="timeline">
-      <!-- 2024.1-2024.5 (arxiv) Learning Physical Simulation with Historical Message-Passing Integration Transformer -->
-      <section class="timeline-item">
-        <div class="timeline-date">
-          2024.1 – 2024.5
-        </div>
-        <div class="timeline-marker"></div>
-        <article class="timeline-content">
-          <div class="item-title">
-            Learning Physical Simulation with Historical Message-Passing Integration Transformer
-          </div>
-          <div class="item-subtitle">
-            arXiv · Data-driven physical simulation
-          </div>
-          <div class="item-tags">
-            <span class="tag">Graph / Transformer</span>
-            <span class="tag">Physical Simulation</span>
-            <span class="tag">Message Passing</span>
-          </div>
-        </article>
-      </section>
-
-      <!-- 2024.5-2025.3 sjtu Research Intern -->
-      <section class="timeline-item">
-        <div class="timeline-date">
-          2024.5 – 2025.3
-        </div>
-        <div class="timeline-marker"></div>
-        <article class="timeline-content">
-          <div class="item-title">
-            Research Intern · SJTU
-          </div>
-          <div class="item-subtitle">
-            CVPR 2025 · AMR-Transformer & Numerical Oil Painting
-          </div>
-          <div class="item-tags">
-            <span class="tag">AMR-Transformer</span>
-            <span class="tag">Neural Fluid Simulation</span>
-            <span class="tag">Long-range Interaction</span>
-            <span class="tag">Numerical Oil Painting</span>
-          </div>
-        </article>
-      </section>
-
-      <!-- 2025.7-2025.9 TranscEngram Algorithm Intern -->
-      <section class="timeline-item">
-        <div class="timeline-date">
-          2025.7 – 2025.9
-        </div>
-        <div class="timeline-marker"></div>
-        <article class="timeline-content">
-          <div class="item-title">
-            Algorithm Intern · TranscEngram
-          </div>
-          <div class="item-subtitle">
-            Robot Indoor Navigation Program
-          </div>
-          <div class="item-tags">
-            <span class="tag">Robotics</span>
-            <span class="tag">Indoor Navigation</span>
-          </div>
-        </article>
-      </section>
-
-      <!-- 2025.8-2025.10 HKU Research Assistant -->
-      <section class="timeline-item">
-        <div class="timeline-date">
-          2025.8 – 2025.10
-        </div>
-        <div class="timeline-marker"></div>
-        <article class="timeline-content">
-          <div class="item-title">
-            Research Assistant · HKU
-          </div>
-          <div class="item-subtitle">
-            Robot Indoor Navigation Program
-          </div>
-          <div class="item-tags">
-            <span class="tag">Robotics</span>
-            <span class="tag">SLAM / Planning</span>
-          </div>
-        </article>
-      </section>
-
-      <!-- 2025.9-2025.11 MIT Remote intern -->
-      <section class="timeline-item">
-        <div class="timeline-date">
-          2025.9 – 2025.11
-        </div>
-        <div class="timeline-marker"></div>
-        <article class="timeline-content">
-          <div class="item-title">
-            Remote Intern · MIT
-          </div>
-          <div class="item-subtitle">
-            ICLR 2025 · Neural Modular Physics for Elastic Simulation
-          </div>
-          <div class="item-tags">
-            <span class="tag">Neural Modular Physics</span>
-            <span class="tag">Elastic Simulation</span>
-            <span class="tag">ICLR 2025</span>
-          </div>
-        </article>
-      </section>
-
-      <!-- 2025.9-2026.2 meshy Research Scientist Intern -->
-      <section class="timeline-item ongoing">
-        <div class="timeline-date">
-          2025.9 – 2026.2
-        </div>
-        <div class="timeline-marker"></div>
-        <article class="timeline-content">
-          <div class="item-title">
-            Research Scientist Intern · meshy
-            <span class="ongoing-label">ongoing</span>
-          </div>
-          <div class="item-subtitle">
-            AI rigging & skinning · Low Poly Generation · GPU octree extraction
-          </div>
-          <div class="item-tags">
-            <span class="tag">AI Rigging</span>
-            <span class="tag">Skinning</span>
-            <span class="tag">Low Poly</span>
-            <span class="tag">GPU Parallel Octree</span>
-          </div>
-        </article>
-      </section>
-
-      <!-- 2025.3-2025.12 NC paper -->
-      <section class="timeline-item">
-        <div class="timeline-date">
-          2025.3 – 2025.12
-        </div>
-        <div class="timeline-marker"></div>
-        <article class="timeline-content">
-          <div class="item-title">
-            NC Paper
-          </div>
-          <div class="item-subtitle">
-            Long-term project · details omitted here
-          </div>
-          <div class="item-tags">
-            <span class="tag">Research</span>
-            <span class="tag">Numerical Computing</span>
-          </div>
-        </article>
-      </section>
-
-      <!-- 2025.12-present tau VAE -->
-      <section class="timeline-item ongoing">
-        <div class="timeline-date">
-          2025.12 – present
-        </div>
-        <div class="timeline-marker"></div>
-        <article class="timeline-content">
-          <div class="item-title">
-            τ-VAE
-            <span class="ongoing-label">ongoing</span>
-          </div>
-          <div class="item-subtitle">
-            Generative modeling project based on VAE variant τ-VAE
-          </div>
-          <div class="item-tags">
-            <span class="tag">VAE</span>
-            <span class="tag">Generative Modeling</span>
-          </div>
-        </article>
-      </section>
-
-      <!-- 2025.12-present AI real-time virtual character -->
-      <section class="timeline-item ongoing">
-        <div class="timeline-date">
-          2025.12 – present
-        </div>
-        <div class="timeline-marker"></div>
-        <article class="timeline-content">
-          <div class="item-title">
-            AI Real-time Virtual Character
-            <span class="ongoing-label">ongoing</span>
-          </div>
-          <div class="item-subtitle">
-            Real-time interactive AI character system
-          </div>
-          <div class="item-tags">
-            <span class="tag">Real-time</span>
-            <span class="tag">Virtual Character</span>
-            <span class="tag">Interactive AI</span>
-          </div>
-        </article>
-      </section>
-    </main>
+    <div class="timeline-wrapper">
+      <div class="timeline" id="timeline"></div>
+      <div class="detail-floating" id="detail-floating"></div>
+    </div>
   </div>
+
+  <script>
+    // ===== 数据 =====
+    const events = [
+      {
+        title: "（arXiv）Learning Physical Simulation with Historical Message-Passing Integration Transformer",
+        subtitle: "Paper",
+        start: "2024-01-01",
+        end:   "2024-05-31",
+        label: "2024.1 – 2024.5",
+        color: "#f9a8d4", // Independent · paper · 浅粉
+        institutions: ["Independent"],
+        detail: `
+          <div><strong>Authors</strong>: <strong>Zeyi Xu</strong>, Yifei Li</div>
+          <div><strong>Affiliations</strong>: Shanghai University; MIT CSAIL</div>
+        `
+      },
+      {
+        title: "（Program）Numerical Oil Painting Simulation",
+        subtitle: "Research Intern",
+        start: "2024-05-01",
+        end:   "2024-09-30",
+        label: "2024.5 – 2024.9",
+        color: "#34d399", // SJTU · program · 偏青绿
+        institutions: ["SJTU"],
+        detail: "这里展示油画数值模拟项目的更多细节（占位符）。"
+      },
+      {
+        title: "（CVPR 2025）AMR-Transformer: Enabling Efficient Long-range Interaction for Complex Neural Fluid Simulation",
+        subtitle: "Research Intern",
+        start: "2024-09-01",
+        end:   "2025-03-31",
+        label: "2024.9 – 2025.3",
+        color: "#f472b6", // SJTU · paper · 中粉
+        institutions: ["SJTU"],
+        detail: `
+          <div><strong>Authors</strong>:
+            <strong>Zeyi Xu*</strong>, Jinfan Liu*, Kuangxu Chen, Ye Chen, Zhangli Hu, Bingbing Ni
+          </div>
+          <div>* Co-first authors.</div>
+          <div><strong>Affiliations</strong>:
+            Shanghai Jiao Tong University; Shanghai University; Shenzhen Technology University
+          </div>
+        `
+      },
+      {
+        title: "NC paper",
+        subtitle: "Paper",
+        start: "2025-03-01",
+        end:   "2025-12-31",
+        label: "2025.3 – 2025.12",
+        color: "#ec4899", // NC · paper · 玫红（和 meshy 明显区分）
+        institutions: [],
+        detail: "这里展示 NC 论文项目的更多细节（占位符）。"
+      },
+      {
+        title: "（Program）Robot Indoor Navigation",
+        subtitle: "Algorithm Intern · Research Assistant",
+        start: "2025-07-01",
+        end:   "2025-10-31",
+        label: "2025.7 – 2025.10",
+        color: "#84cc16", // TranscEngram/HKU · program · 黄绿色
+        institutions: ["TranscEngram", "HKU"],
+        detail: "这里展示在 TranscEngram 与 HKU 之间共同推进的室内导航项目细节（占位符）。"
+      },
+      {
+        title: "（ICLR 2026）Neural Modular Physics for Elastic Simulation",
+        subtitle: "Remote Intern",
+        start: "2025-09-01",
+        end:   "2025-11-30",
+        label: "2025.9 – 2025.11",
+        color: "#db2777", // MIT · paper · 更深一点的玫红
+        institutions: ["MIT"],
+        detail: `
+          <div><strong>Authors</strong>:
+            Yifei Li, Haixu Wu, <strong>Zeyi Xu</strong>, Tuur Stuyck, Wojciech Matusik
+          </div>
+          <div><strong>Affiliations</strong>:
+            MIT CSAIL; Shanghai University
+          </div>
+        `
+      },
+      {
+        title: "（Program）AI rigging & skinning",
+        subtitle: "Research Scientist Intern",
+        start: "2025-09-01",
+        end:   "2025-12-01",
+        label: "2025.9 – 2025.12",
+        color: "#22c55e", // meshy · program · 中绿
+        institutions: ["meshy"],
+        detail: "这里展示 meshy AI rigging & skinning 项目的更多细节（占位符）。"
+      },
+      {
+        title: "（Program）Low Poly Generation",
+        subtitle: "Research Scientist Intern",
+        start: "2025-12-01",
+        end:   null,
+        label: "2025.12 – present",
+        color: "#16a34a", // meshy · program · 稍深
+        institutions: ["meshy"],
+        detail: "这里展示 meshy Low Poly Generation 项目的更多细节（占位符）。"
+      },
+      {
+        title: "（Program）GPU parallel adaptive octree mesh extraction",
+        subtitle: "Research Scientist Intern",
+        start: "2025-12-01",
+        end:   null,
+        label: "2025.12 – present",
+        color: "#15803d", // meshy · program · 最深
+        institutions: ["meshy"],
+        detail: "这里展示 meshy GPU 并行自适应八叉树网格抽取项目的更多细节（占位符）。"
+      }
+    ];
+
+    function parseDate(dateStr) {
+      return new Date(dateStr + "T00:00:00");
+    }
+
+    function formatDateLabel(d) {
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      return y + "." + m;
+    }
+
+    function hexToRgba(hex, alpha) {
+      let c = hex.replace("#", "");
+      if (c.length === 3) {
+        c = c.split("").map(ch => ch + ch).join("");
+      }
+      const num = parseInt(c, 16);
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function monthIndexFromDate(d) {
+      return d.getFullYear() * 12 + d.getMonth(); // 0-based
+    }
+
+    function yearFromMonthIndex(idx) {
+      return Math.floor(idx / 12);
+    }
+
+    function monthFromMonthIndex(idx) {
+      return idx % 12; // 0-based
+    }
+
+    let currentActiveId = null;
+    let renderedEvents = [];
+
+    function updateDetailPanel(eventId) {
+      const panel = document.getElementById("detail-floating");
+      if (!panel) return;
+
+      if (!eventId) {
+        panel.style.opacity = "0";
+        panel.innerHTML = "";
+        return;
+      }
+
+      const e = renderedEvents.find(ev => ev.eventId === eventId);
+      if (!e) return;
+
+      panel.style.opacity = "1";
+      panel.style.borderColor = hexToRgba(e.color, 0.8);
+      panel.style.backgroundColor = hexToRgba(e.color, 0.08);
+      panel.style.left = e.detailLeft + "px";
+      panel.style.top = e.detailTop + "px";
+      panel.innerHTML = `
+        <div class="detail-title">${e.title}</div>
+        <div class="detail-subtitle">${
+          (e.institutions && e.institutions.length)
+            ? e.institutions.join(" · ")
+            : e.subtitle
+        }</div>
+        <div class="detail-dates">${e.label}</div>
+        <div class="detail-body">${e.detail || "这里展示该项目的更多细节（占位符）。"}</div>
+      `;
+    }
+
+    function applyActive(eventId) {
+      const container = document.getElementById("timeline");
+      const pieces = container.querySelectorAll(".event-piece");
+      if (!pieces.length) return;
+
+      if (currentActiveId === eventId) return;
+      currentActiveId = eventId;
+
+      pieces.forEach(el => {
+        if (!eventId) {
+          el.classList.remove("active", "dimmed");
+        } else if (el.dataset.eventId === eventId) {
+          el.classList.add("active");
+          el.classList.remove("dimmed");
+        } else {
+          el.classList.add("dimmed");
+          el.classList.remove("active");
+        }
+      });
+
+      updateDetailPanel(eventId);
+    }
+
+    function setupHover() {
+      const container = document.getElementById("timeline");
+
+      container.addEventListener("mousemove", e => {
+        const target = e.target.closest(".event-card, .event-line-core, .leader-line, .date-label");
+        if (target && target.dataset.eventId) {
+          applyActive(target.dataset.eventId);
+        } else {
+          applyActive(null);
+        }
+      });
+
+      container.addEventListener("mouseleave", () => {
+        applyActive(null);
+      });
+    }
+
+    function buildTimeline() {
+      const container = document.getElementById("timeline");
+      container.innerHTML = "";
+      renderedEvents = [];
+      currentActiveId = null;
+      updateDetailPanel(null);
+
+      const now = new Date();
+      const nowMonthIndex = monthIndexFromDate(now);
+
+      // 解析事件并用“月份格子”描述
+      const parsed = events.map((e, idx) => {
+        const startDate = parseDate(e.start);
+        const endDate = e.end ? parseDate(e.end) : now;
+        const isOngoing = !e.end;
+
+        const startMonth = monthIndexFromDate(startDate); // inclusive
+        const endMonthBase = monthIndexFromDate(endDate); // 对应 label 的月份
+        const endUnit = isOngoing ? nowMonthIndex + 1 : endMonthBase; // ongoing 多占一格
+
+        return {
+          ...e,
+          startDate,
+          endDate,
+          isOngoing,
+          startMonth,
+          endMonthBase,
+          startUnit: startMonth,
+          endUnit,
+          index: idx
+        };
+      });
+
+      const minUnit = parsed.reduce(
+        (acc, e) => Math.min(acc, e.startUnit),
+        parsed[0].startUnit
+      );
+      const maxUnit = parsed.reduce(
+        (acc, e) => Math.max(acc, e.endUnit),
+        parsed[0].endUnit
+      );
+
+      const wrapper = container.parentElement;
+      const height = wrapper.offsetHeight;
+      const topPadding = 30;
+      const bottomPadding = 30;
+      const usableHeight = height - topPadding - bottomPadding;
+
+      const axisX = container.offsetWidth / 2;
+
+      const totalUnits = maxUnit - minUnit || 1;
+      function mapUnitToY(unit) {
+        const ratio = (unit - minUnit) / totalUnits;
+        return topPadding + ratio * usableHeight;
+      }
+
+      // ===== 时间刻度：每月 + 每年 =====
+      const minMonthIdx = minUnit;
+      const maxMonthIdxForTicks = parsed.reduce(
+        (acc, e) => Math.max(acc, e.endMonthBase),
+        parsed[0].endMonthBase
+      );
+
+      for (let idx = minMonthIdx; idx <= maxMonthIdxForTicks; idx++) {
+        const y = mapUnitToY(idx);
+        const month = monthFromMonthIndex(idx);
+        const year = yearFromMonthIndex(idx);
+
+        const tick = document.createElement("div");
+        tick.className = "time-tick event-piece";
+        tick.style.top = `${y}px`;
+
+        if (month === 0) {
+          tick.classList.add("time-tick-year");
+          const label = document.createElement("div");
+          label.className = "time-tick-label-year";
+          label.textContent = `${year}`;
+          tick.appendChild(label);
+        } else {
+          tick.classList.add("time-tick-month");
+          const label = document.createElement("div");
+          label.className = "time-tick-label-month";
+          label.textContent = `${month + 1}`;
+          tick.appendChild(label);
+        }
+
+        container.appendChild(tick);
+      }
+
+      // ===== 根据月份格子计算每条 timeline 的上下端（严格按格子，不再拉伸） =====
+      parsed.forEach(e => {
+        const top = mapUnitToY(e.startUnit);
+        const bottom = mapUnitToY(e.endUnit);
+        e.lineTop = top;
+        e.lineBottom = bottom;
+        e.lineHeight = bottom - top;
+        e.centerRaw = (top + bottom) / 2;
+      });
+
+      // ===== 日期 label 文本 + jitter，防止 pill 重叠 =====
+      parsed.forEach(e => {
+        e.startLabelText = formatDateLabel(e.startDate);
+        e.endLabelText = e.isOngoing ? "present" : formatDateLabel(e.endDate);
+      });
+
+      const labelGroups = {};
+      parsed.forEach(e => {
+        const sKey = e.startLabelText;
+        (labelGroups[sKey] = labelGroups[sKey] || []).push({ event: e, type: "start" });
+        const eKey = e.endLabelText;
+        (labelGroups[eKey] = labelGroups[eKey] || []).push({ event: e, type: "end" });
+      });
+
+      const jitter = 10;
+      Object.values(labelGroups).forEach(group => {
+        if (group.length <= 1) return;
+        group.forEach((entry, index) => {
+          const offset = (index - (group.length - 1) / 2) * jitter;
+          if (entry.type === "start") {
+            entry.event.startLabelOffsetY = offset;
+          } else {
+            entry.event.endLabelOffsetY = offset;
+          }
+        });
+      });
+
+      // ===== 卡片中心去重，避免互相压住 =====
+      const labelInfos = parsed
+        .map(e => ({ index: e.index, centerRaw: e.centerRaw }))
+        .sort((a, b) => a.centerRaw - b.centerRaw);
+
+      const minGap = 80;
+      let lastY = -Infinity;
+      labelInfos.forEach(info => {
+        let y = info.centerRaw;
+        if (y - lastY < minGap) {
+          y = lastY + minGap;
+        }
+        parsed[info.index].labelCenter = y;
+        lastY = y;
+      });
+
+      // 左右交替排卡片
+      parsed.forEach((e, idx) => {
+        e.side = idx % 2 === 0 ? "left" : "right";
+      });
+
+      const cardWidth = 260;
+      const gap = 40;
+      const dateLabelOffset = 20;
+      const detailWidth = 260;
+      const detailGap = 80;
+
+      // ===== 渲染每个 event =====
+      parsed.forEach((e, idx) => {
+        const eventId = "e-" + idx;
+        e.eventId = eventId;
+        renderedEvents.push(e);
+
+        const lineClusterOffset = (idx - (parsed.length - 1) / 2) * 6;
+        const lineX = axisX + lineClusterOffset;
+
+        // 线段
+        const line = document.createElement("div");
+        line.className = "event-line-core event-piece";
+        line.style.setProperty("--color", e.color);
+        line.style.left = (lineX - 3) + "px";
+        line.style.top = e.lineTop + "px";
+        line.style.height = e.lineHeight + "px";
+        line.dataset.eventId = eventId;
+        container.appendChild(line);
+
+        // 起点日期 pill
+        const startLabelY = e.lineTop + (e.startLabelOffsetY || 0);
+        const startLabel = document.createElement("div");
+        startLabel.className = "date-label event-piece";
+        startLabel.textContent = e.startLabelText;
+        startLabel.style.left = (lineX + dateLabelOffset) + "px";
+        startLabel.style.top = startLabelY + "px";
+        startLabel.style.transform = "translateY(-50%)";
+        startLabel.dataset.eventId = eventId;
+        container.appendChild(startLabel);
+
+        // 终点日期 pill
+        const endLabelY = e.lineBottom + (e.endLabelOffsetY || 0);
+        const endLabel = document.createElement("div");
+        endLabel.className = "date-label event-piece";
+        endLabel.textContent = e.endLabelText;
+        endLabel.style.left = (lineX + dateLabelOffset) + "px";
+        endLabel.style.top = endLabelY + "px";
+        endLabel.style.transform = "translateY(50%)";
+        endLabel.dataset.eventId = eventId;
+        container.appendChild(endLabel);
+
+        // 卡片
+        const card = document.createElement("div");
+        card.className = "event-card event-piece";
+        card.style.setProperty("--color", e.color);
+        card.style.backgroundColor = hexToRgba(e.color, 0.10);
+        card.style.borderColor = hexToRgba(e.color, 0.35);
+        card.style.top = e.labelCenter + "px";
+
+        let cardLeft;
+        if (e.side === "left") {
+          cardLeft = axisX - gap - cardWidth;
+        } else {
+          cardLeft = axisX + gap;
+        }
+        card.style.left = cardLeft + "px";
+        card.dataset.eventId = eventId;
+        e.cardLeft = cardLeft;
+        e.cardWidth = cardWidth;
+
+        // 机构徽标
+        if (e.institutions && e.institutions.length) {
+          const instRow = document.createElement("div");
+          instRow.className = "event-institutions";
+          e.institutions.forEach(name => {
+            const pill = document.createElement("span");
+            pill.className = "inst-pill";
+            pill.textContent = name;
+            pill.style.backgroundColor = hexToRgba(e.color, 0.18);
+            pill.style.borderColor = hexToRgba(e.color, 0.6);
+            instRow.appendChild(pill);
+          });
+          card.appendChild(instRow);
+        }
+
+        const titleEl = document.createElement("div");
+        titleEl.className = "event-title";
+        titleEl.textContent = e.title;
+
+        const subtitleEl = document.createElement("div");
+        subtitleEl.className = "event-subtitle";
+        subtitleEl.textContent = e.subtitle;
+
+        const datesEl = document.createElement("div");
+        datesEl.className = "event-dates";
+        datesEl.textContent = e.label;
+
+        card.appendChild(titleEl);
+        card.appendChild(subtitleEl);
+        card.appendChild(datesEl);
+        container.appendChild(card);
+
+        // 虚线
+        const leader = document.createElement("div");
+        leader.className = "leader-line event-piece";
+        leader.style.setProperty("--color", e.color);
+        leader.dataset.eventId = eventId;
+
+        const anchorY = Math.max(
+          e.lineTop + 4,
+          Math.min(e.lineBottom - 4, e.labelCenter)
+        );
+        leader.style.top = anchorY + "px";
+
+        if (e.side === "left") {
+          const cardRight = cardLeft + cardWidth;
+          const leaderLeft = cardRight + 4;
+          const leaderRight = lineX;
+          leader.style.left = leaderLeft + "px";
+          leader.style.width = (leaderRight - leaderLeft) + "px";
+        } else {
+          const leaderLeft = lineX + 4;
+          const leaderRight = cardLeft - 4;
+          leader.style.left = leaderLeft + "px";
+          leader.style.width = (leaderRight - leaderLeft) + "px";
+        }
+
+        container.appendChild(leader);
+
+        // 浮动详情框的位置：永远在卡片更外侧
+        let detailLeft;
+        if (e.side === "left") {
+          detailLeft = cardLeft - detailWidth - detailGap;
+        } else {
+          detailLeft = cardLeft + cardWidth + detailGap;
+        }
+        e.detailLeft = detailLeft;
+        e.detailTop = e.labelCenter;
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      buildTimeline();
+      setupHover();
+    });
+
+    window.addEventListener("resize", buildTimeline);
+  </script>
 </body>
 </html>
