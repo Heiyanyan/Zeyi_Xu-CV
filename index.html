@@ -250,6 +250,28 @@
       z-index: 50;
     }
 
+    .detail-media {
+      position: absolute;
+      padding: 6px;
+      border-radius: 8px;
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.2);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 45;
+      transform: translate(-50%, -50%);
+    }
+
+    .detail-media img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 6px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
+      object-fit: contain;
+    }
+
     .detail-title {
       font-size: 14px;
       font-weight: 600;
@@ -325,6 +347,7 @@
     <div class="timeline-wrapper">
       <div class="timeline" id="timeline"></div>
       <div class="detail-floating" id="detail-floating"></div>
+      <div class="detail-media" id="detail-media"></div>
     </div>
   </div>
 
@@ -469,7 +492,7 @@
             integrates a cross-shaped convolution kernel with message passing to efficiently process semi-structured meshes.
           </p>
           <p>
-            Demonstrated superior efficiency compared to standalone CNN or GNN baselines while still exposing accuracy gaps that halted publication.
+            Demonstrated superior efficiency compared to standalone CNN or GNN baselines while still exposing accuracy gaps that halted publication. The method is extremely similar to SubdivNet, but I didn't realize it at the time.
           </p>
         `
       },
@@ -489,7 +512,7 @@
             <a href="https://scholar.google.com/citations?user=SMdBcsEAAAAJ&hl=en" target="_blank" rel="noopener noreferrer">Kuangxu Chen</a>
             and
             <a href="https://scholar.google.com/citations?user=N4ejGnoAAAAJ&hl=en" target="_blank" rel="noopener noreferrer">Yifei Li</a>
-            to simulate compressible fluids on 2D unstructured meshes.
+            to simulate compressible fluids on 2D regular grid.
           </p>
           <p>
             Implemented the solver in <strong>PyTorch</strong> so gradients flow through time marching, enabling supersonic fluid parameter optimization.
@@ -629,6 +652,15 @@
 
     const detailHeights = [];
     const detailPanelBottomOffset = -180; // positive pushes up, negative allows lower
+    const detailMediaGap = 24; // horizontal distance between floating text and image
+    const detailMediaVerticalGap = 24; // vertical gap when stacking image
+    const detailMediaEdgeMargin = 32; // keep media away from wrapper edges
+    const detailMediaBaseHeight = 400; // preferred rendered height before scaling
+    const detailMediaFallbackAspect = 1.6;
+    const detailMediaBoundaryOverflow = 120; // allow media to extend beyond wrapper edges vertically
+    const detailMediaOverlapWeight = 1000;
+    const detailMediaAbovePenalty = 15; // bias to keep images below the card when possible
+    const detailMediaDistancePenalty = 0.2;
     function extractDetailBody(content) {
       const temp = document.createElement("div");
       temp.innerHTML = content || "";
@@ -644,12 +676,16 @@
       };
     }
 
-    function buildDetailHtml(e) {
+    function buildDetailHtml(e, captureMedia = false) {
       const subtitleText = (e.institutions && e.institutions.length)
         ? e.institutions.join(" / ")
         : e.subtitle;
       const bodyContent = e.detail || "More details are available upon request.";
       const parts = extractDetailBody(bodyContent);
+
+      if (captureMedia) {
+        e.detailMedia = parts.media || "";
+      }
 
       return `
         <div class="detail-title">${e.title}</div>
@@ -674,7 +710,7 @@
       document.body.appendChild(temp);
 
       events.forEach((e, idx) => {
-        temp.innerHTML = buildDetailHtml(e);
+        temp.innerHTML = buildDetailHtml(e, true);
         detailHeights[idx] = temp.offsetHeight;
       });
 
@@ -718,11 +754,16 @@
 
     function updateDetailPanel(eventId) {
       const panel = document.getElementById("detail-floating");
+      const mediaPanel = document.getElementById("detail-media");
       if (!panel) return;
 
       if (!eventId) {
         panel.style.opacity = "0";
         panel.innerHTML = "";
+        if (mediaPanel) {
+          mediaPanel.style.opacity = "0";
+          mediaPanel.innerHTML = "";
+        }
         return;
       }
 
@@ -738,9 +779,13 @@
       const wrapper = document.querySelector(".timeline-wrapper");
       const panelHeight = panel.offsetHeight;
       let topPosition = e.detailTop;
+      let wrapperHeight = 0;
+
+      if (wrapper) {
+        wrapperHeight = parseFloat(wrapper.dataset.timelineHeight) || wrapper.offsetHeight || 0;
+      }
 
       if (wrapper && panelHeight) {
-        const wrapperHeight = parseFloat(wrapper.dataset.timelineHeight) || wrapper.offsetHeight;
         const margin = 24;
         const halfHeight = panelHeight / 2;
         const minTop = margin + halfHeight;
@@ -751,9 +796,300 @@
         } else {
           topPosition = wrapperHeight / 2;
         }
+      } else if (!wrapperHeight) {
+        wrapperHeight = window.innerHeight;
       }
 
-      panel.style.top = topPosition + "px";
+      const finalTop = topPosition;
+      panel.style.top = finalTop + "px";
+
+      if (mediaPanel) {
+        const hasMedia = e.detailMedia && e.detailMedia.trim().length > 0;
+        if (!hasMedia) {
+          mediaPanel.style.opacity = "0";
+          mediaPanel.innerHTML = "";
+        } else {
+          mediaPanel.innerHTML = e.detailMedia;
+          const img = mediaPanel.querySelector("img");
+          if (!img) {
+            mediaPanel.style.opacity = "0";
+            mediaPanel.innerHTML = "";
+            return;
+          }
+
+          if (!img.complete) {
+            img.addEventListener(
+              "load",
+              () => {
+                if (currentActiveId === eventId) updateDetailPanel(eventId);
+              },
+              { once: true }
+            );
+          }
+
+          const naturalWidth = img.naturalWidth || img.width || detailMediaBaseHeight * detailMediaFallbackAspect;
+          const naturalHeight = img.naturalHeight || img.height || detailMediaBaseHeight;
+          const aspect = naturalHeight ? naturalWidth / naturalHeight : detailMediaFallbackAspect;
+          const baseHeight = detailMediaBaseHeight;
+          const baseWidth = aspect * baseHeight;
+
+          const setSize = (width, height) => {
+            mediaPanel.style.width = width + "px";
+            mediaPanel.style.height = height + "px";
+            img.style.width = "100%";
+            img.style.height = "100%";
+          };
+
+          const buildSizeWithPreferredHeight = (maxWidth, maxHeight) => {
+            if ((isFinite(maxWidth) && maxWidth <= 0) || (isFinite(maxHeight) && maxHeight <= 0)) return null;
+            const usableMaxHeight = isFinite(maxHeight) ? maxHeight : baseHeight;
+            let height = Math.min(baseHeight, usableMaxHeight);
+            let width = height * aspect;
+
+            if (isFinite(maxWidth) && width > maxWidth) {
+              width = maxWidth;
+              height = width / aspect;
+            }
+
+            if (height <= 0 || width <= 0) return null;
+            return { width, height };
+          };
+
+          const detailWidth = e.detailWidth || panel.offsetWidth || baseWidth;
+          const detailCenterX = e.detailLeft + detailWidth / 2;
+          const panelHalfHeight = (panelHeight || 0) / 2;
+          const panelTopEdge = finalTop - panelHalfHeight;
+          const panelBottomEdge = finalTop + panelHalfHeight;
+          const wrapperWidth = wrapper ? wrapper.offsetWidth : window.innerWidth;
+          const container = document.getElementById("timeline");
+          const axisX = container && container.dataset.axisX ? parseFloat(container.dataset.axisX) : wrapperWidth / 2;
+          const cardEl = document.querySelector(`.event-card[data-event-id="${eventId}"]`);
+          const cardHeight = cardEl ? cardEl.offsetHeight : 0;
+          const cardRect = cardEl
+            ? {
+                left: e.cardLeft,
+                right: e.cardLeft + (e.cardWidth || cardEl.offsetWidth || 0),
+                top: e.labelCenter - cardHeight / 2,
+                bottom: e.labelCenter + cardHeight / 2
+              }
+            : null;
+
+          const detailRectRaw =
+            panelHeight && panel.offsetWidth
+              ? {
+                  left: e.detailLeft,
+                  right: e.detailLeft + panel.offsetWidth,
+                  top: finalTop - panelHalfHeight,
+                  bottom: finalTop + panelHalfHeight
+                }
+              : null;
+
+          const detailRectCenterX = detailRectRaw
+            ? (detailRectRaw.left + detailRectRaw.right) / 2
+            : detailCenterX;
+          const effectiveWrapperHeight = wrapperHeight || window.innerHeight || panelHeight || baseHeight;
+          const wrapperMidY = effectiveWrapperHeight / 2;
+          const preferLeftPlacement = detailRectCenterX >= axisX;
+          const preferAbovePlacement = finalTop >= wrapperMidY;
+          let placeMediaToLeft = preferLeftPlacement;
+
+          const minAllowedX = detailMediaEdgeMargin - detailMediaBoundaryOverflow;
+          const maxAllowedX = wrapperWidth - detailMediaEdgeMargin + detailMediaBoundaryOverflow;
+          const leftExtent = e.detailLeft - detailMediaGap - baseWidth;
+          const rightExtent = e.detailLeft + detailWidth + detailMediaGap + baseWidth;
+          const hasLeftSpace = leftExtent >= minAllowedX;
+          const hasRightSpace = rightExtent <= maxAllowedX;
+          if (placeMediaToLeft && !hasLeftSpace && hasRightSpace) placeMediaToLeft = false;
+          if (!placeMediaToLeft && !hasRightSpace && hasLeftSpace) placeMediaToLeft = true;
+
+          const expandRect = (rect, margin = 0) =>
+            rect
+              ? {
+                  left: rect.left - margin,
+                  right: rect.right + margin,
+                  top: rect.top - margin,
+                  bottom: rect.bottom + margin
+                }
+              : null;
+
+          const conflictMargin = 18;
+          const cardRectExpanded = expandRect(cardRect, conflictMargin);
+          const detailRectExpanded = expandRect(detailRectRaw, conflictMargin);
+
+          const buildMediaRect = centerY => {
+            const top = centerY - baseHeight / 2;
+            const bottom = centerY + baseHeight / 2;
+            if (placeMediaToLeft) {
+              const anchor = e.detailLeft - detailMediaGap;
+              return {
+                left: anchor - baseWidth,
+                right: anchor,
+                top,
+                bottom
+              };
+            }
+            const anchor = e.detailLeft + detailWidth + detailMediaGap;
+            return {
+              left: anchor,
+              right: anchor + baseWidth,
+              top,
+              bottom
+            };
+          };
+
+          const intersects = (a, b) => {
+            if (!a || !b) return false;
+            return !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+          };
+
+          const overlapArea = (a, b) => {
+            if (!a || !b) return 0;
+            const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+            const height = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+            return width * height;
+          };
+
+          let placedHorizontally = false;
+          if (wrapperWidth && wrapperHeight) {
+            const minCenterY = detailMediaEdgeMargin - detailMediaBoundaryOverflow + baseHeight / 2;
+            const maxCenterY = wrapperHeight - detailMediaEdgeMargin + detailMediaBoundaryOverflow - baseHeight / 2;
+            const clampCenter = y => Math.min(Math.max(y, minCenterY), maxCenterY);
+
+            const candidateCenters = [];
+            const pushCandidate = val => {
+              if (Number.isFinite(val)) candidateCenters.push(clampCenter(val));
+            };
+
+            pushCandidate(finalTop);
+            if (detailRectRaw) {
+              pushCandidate(detailRectRaw.top - detailMediaVerticalGap - baseHeight / 2);
+              pushCandidate(detailRectRaw.bottom + detailMediaVerticalGap + baseHeight / 2);
+            }
+            if (cardRect) {
+              pushCandidate(cardRect.top - detailMediaVerticalGap - baseHeight / 2);
+              pushCandidate(cardRect.bottom + detailMediaVerticalGap + baseHeight / 2);
+            }
+
+            const uniqueCenters = [];
+            candidateCenters.forEach(center => {
+              if (!uniqueCenters.some(existing => Math.abs(existing - center) < 0.5)) {
+                uniqueCenters.push(center);
+              }
+            });
+
+            const preferredTarget = detailRectRaw
+              ? preferAbovePlacement
+                ? detailRectRaw.top - detailMediaVerticalGap - baseHeight / 2
+                : detailRectRaw.bottom + detailMediaVerticalGap + baseHeight / 2
+              : preferAbovePlacement
+              ? finalTop - detailMediaVerticalGap - baseHeight / 2
+              : finalTop + detailMediaVerticalGap + baseHeight / 2;
+            const weightCenter = center => {
+              const ref = Number.isFinite(preferredTarget) ? preferredTarget : finalTop;
+              const wrongSidePenalty = preferAbovePlacement
+                ? center > finalTop
+                  ? detailMediaAbovePenalty
+                  : 0
+                : center < finalTop
+                ? detailMediaAbovePenalty
+                : 0;
+              return Math.abs(center - ref) + wrongSidePenalty;
+            };
+
+            uniqueCenters.sort((a, b) => weightCenter(a) - weightCenter(b));
+
+            const evaluateOverlap = center => {
+              const rect = buildMediaRect(center);
+              return overlapArea(rect, cardRectExpanded) + overlapArea(rect, detailRectExpanded);
+            };
+
+            let chosenCenter = uniqueCenters.length ? uniqueCenters[0] : clampCenter(finalTop);
+            let minOverlap = Infinity;
+
+            for (const center of uniqueCenters) {
+              const rect = buildMediaRect(center);
+              const overlaps =
+                (cardRectExpanded && intersects(rect, cardRectExpanded)) ||
+                (detailRectExpanded && intersects(rect, detailRectExpanded));
+              const overlapScore = evaluateOverlap(center);
+              if (!overlaps) {
+                chosenCenter = center;
+                minOverlap = 0;
+                break;
+              }
+              if (overlapScore < minOverlap) {
+                minOverlap = overlapScore;
+                chosenCenter = center;
+              }
+            }
+
+            setSize(baseWidth, baseHeight);
+            if (placeMediaToLeft) {
+              const anchor = e.detailLeft - detailMediaGap;
+              mediaPanel.style.left = anchor + "px";
+              mediaPanel.style.transform = "translate(-100%, -50%)";
+            } else {
+              const anchor = e.detailLeft + detailWidth + detailMediaGap;
+              mediaPanel.style.left = anchor + "px";
+              mediaPanel.style.transform = "translateY(-50%)";
+            }
+            mediaPanel.style.top = chosenCenter + "px";
+            placedHorizontally = true;
+          }
+
+          if (!placedHorizontally) {
+            const marginWithOverflow = detailMediaEdgeMargin - detailMediaBoundaryOverflow;
+            const spaceAbove = panelTopEdge - marginWithOverflow - detailMediaVerticalGap;
+            const spaceBelow = wrapperHeight - panelBottomEdge - marginWithOverflow - detailMediaVerticalGap;
+            const canPlaceAbove = spaceAbove > 0;
+            const canPlaceBelow = spaceBelow > 0;
+            let placeAbove;
+            if (preferAbovePlacement && canPlaceAbove) {
+              placeAbove = true;
+            } else if (!preferAbovePlacement && canPlaceBelow) {
+              placeAbove = false;
+            } else {
+              placeAbove = spaceAbove >= spaceBelow;
+            }
+            const availableHeight = placeAbove ? spaceAbove : spaceBelow;
+            const availableWidth = wrapperWidth - detailMediaEdgeMargin * 2;
+            buildSizeWithPreferredHeight(availableWidth, availableHeight);
+            setSize(baseWidth, baseHeight);
+
+            let centerX = detailCenterX;
+            const halfWidth = baseWidth / 2;
+            if (placeMediaToLeft) {
+              const maxCenter = detailRectRaw
+                ? detailRectRaw.left - detailMediaGap - halfWidth
+                : detailCenterX - detailMediaGap;
+              centerX = Math.min(centerX, maxCenter);
+              centerX = Math.max(detailMediaEdgeMargin + halfWidth, centerX);
+            } else {
+              const minCenter = detailRectRaw
+                ? detailRectRaw.right + detailMediaGap + halfWidth
+                : detailCenterX + detailMediaGap;
+              centerX = Math.max(centerX, minCenter);
+              centerX = Math.min(wrapperWidth - detailMediaEdgeMargin - halfWidth, centerX);
+            }
+
+            let centerY;
+            if (placeAbove) {
+              centerY = panelTopEdge - detailMediaVerticalGap - baseHeight / 2;
+            } else {
+              centerY = panelBottomEdge + detailMediaVerticalGap + baseHeight / 2;
+            }
+            const minCenterY = detailMediaEdgeMargin - detailMediaBoundaryOverflow + baseHeight / 2;
+            const maxCenterY = wrapperHeight - detailMediaEdgeMargin + detailMediaBoundaryOverflow - baseHeight / 2;
+            centerY = Math.min(Math.max(centerY, minCenterY), maxCenterY);
+
+            mediaPanel.style.left = centerX + "px";
+            mediaPanel.style.top = centerY + "px";
+            mediaPanel.style.transform = "translate(-50%, -50%)";
+          }
+
+          mediaPanel.style.opacity = "1";
+        }
+      }
     }
 
     function applyActive(eventId) {
@@ -866,6 +1202,7 @@
       const usableHeight = height - topPadding - bottomPadding;
 
       const axisX = container.offsetWidth / 2;
+      container.dataset.axisX = axisX;
       function mapUnitToY(unit) {
         const ratio = (unit - minUnit) / totalUnits;
         return topPadding + ratio * usableHeight;
@@ -1095,6 +1432,7 @@
 
         e.detailLeft = detailLeft;
         e.detailTop = e.labelCenter;
+        e.detailWidth = detailWidth;
       });
     }
 
