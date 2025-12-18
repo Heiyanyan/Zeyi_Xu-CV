@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Research & Intern Timeline</title>
+  <title>Research & Project Timeline</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, "Noto Sans", sans-serif;
     }
 
     body {
@@ -41,7 +42,6 @@
       position: relative;
       margin: 0 auto;
       max-width: 760px;
-      height: 1600px; /* 超出一屏，可以滚动 */
       padding: 24px 0;
     }
 
@@ -51,7 +51,7 @@
       height: 100%;
     }
 
-    /* 中央时间轴 */
+    /* Central axis */
     .timeline::before {
       content: "";
       position: absolute;
@@ -63,7 +63,7 @@
       background: linear-gradient(to bottom, #d7dde5, #c0c6d4);
     }
 
-    /* 时间刻度：公共样式 */
+    /* Shared tick style */
     .time-tick {
       position: absolute;
       left: 50%;
@@ -81,21 +81,21 @@
       background: #bbb;
     }
 
-    /* 年大刻度：粗一点 */
+    /* Year ticks */
     .time-tick-year::before {
       width: 16px;
       height: 3px;
       background: #9ca3af;
     }
 
-    /* 月小刻度：短一点、细一点 */
+    /* Month ticks */
     .time-tick-month::before {
       width: 10px;
       height: 1px;
       background: #d1d5db;
     }
 
-    /* 年份文字：超大号浅灰，叠在灰线位置 */
+    /* Year label (large, faint) */
     .time-tick-label-year {
       position: absolute;
       left: 50%;
@@ -106,7 +106,7 @@
       color: rgba(148, 163, 184, 0.28);
     }
 
-    /* 月份文字：略小一点，同色系，标 YYYY.M */
+    /* Month label (smaller, faint) */
     .time-tick-label-month {
       position: absolute;
       left: 50%;
@@ -117,7 +117,7 @@
       color: rgba(148, 163, 184, 0.40);
     }
 
-    /* 彩色竖线本体 */
+    /* Event line core */
     .event-line-core {
       position: absolute;
       width: 6px;
@@ -127,7 +127,7 @@
       cursor: pointer;
     }
 
-    /* 起止时间标签 */
+    /* Start/end date pill */
     .date-label {
       position: absolute;
       font-size: 10px;
@@ -137,11 +137,12 @@
       border-radius: 4px;
       box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
       white-space: nowrap;
-      opacity: 0.85;
       cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.18s ease, transform 0.18s ease;
     }
 
-    /* 卡片（项目介绍） */
+    /* Event summary card */
     .event-card {
       position: absolute;
       width: 260px;
@@ -155,7 +156,7 @@
       background: #ffffff;
     }
 
-    /* 机构徽标行 */
+    /* Institution pills row */
     .event-institutions {
       display: flex;
       flex-wrap: wrap;
@@ -191,7 +192,7 @@
       color: #888;
     }
 
-    /* 竖线到卡片的虚线 */
+    /* Dashed leader line from axis to card */
     .leader-line {
       position: absolute;
       height: 0;
@@ -199,7 +200,7 @@
       cursor: pointer;
     }
 
-    /* 高亮/虚化的公共类 */
+    /* Shared interaction states */
     .event-piece {
       transition: opacity 0.18s ease, transform 0.18s ease,
                   box-shadow 0.18s ease, width 0.18s ease,
@@ -230,21 +231,16 @@
       font-weight: 600;
     }
 
-    .detail-panel {
-      display: none;
-    }
-
-    /* 浮动详情框：放在时间轴两侧、偏外侧 */
+    /* Floating detail panel (hover) */
     .detail-floating {
       position: absolute;
-      width: 260px;
-      padding: 12px 14px;
+      width: 420px;
+      padding: 12px 16px;
       border-radius: 8px;
       background: #e5e7eb;
       border: 1px solid #d1d5db;
       font-size: 13px;
       line-height: 1.5;
-      min-height: 72px;
       transform: translateY(-50%);
       box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
       transition: background-color 0.18s ease, border-color 0.18s ease,
@@ -277,6 +273,39 @@
       color: #111827;
     }
 
+    .detail-body-text {
+      column-count: 1;
+      column-gap: 0;
+    }
+
+    /* Detail body typography helpers */
+    .detail-body-text p {
+      margin: 6px 0;
+    }
+
+    .detail-body-text ul {
+      margin: 6px 0 0 18px;
+    }
+
+    .detail-body-text li {
+      margin: 3px 0;
+    }
+
+    .detail-body-text a {
+      color: #0f172a;
+      text-decoration: underline;
+    }
+
+    .detail-body-text .meta {
+      font-size: 12px;
+      color: #374151;
+    }
+
+    .detail-body-text .section-title {
+      font-weight: 700;
+      margin: 8px 0 4px;
+    }
+
     @media (max-width: 768px) {
       .timeline-wrapper {
         height: 1600px;
@@ -300,117 +329,357 @@
   </div>
 
   <script>
-    // ===== 数据 =====
+    // ===== Data =====
     const events = [
       {
-        title: "（arXiv）Learning Physical Simulation with Historical Message-Passing Integration Transformer",
+        title: "(arXiv) Learning Physical Simulation with Historical Message-Passing Integration Transformer",
         subtitle: "Paper",
         start: "2024-01-01",
-        end:   "2024-05-31",
+        end:   "2024-05-30",
         label: "2024.1 – 2024.5",
-        color: "#f9a8d4", // Independent · paper · 浅粉
-        institutions: ["Independent"],
+        color: "#9ca3af", // Failure · paper
+        institutions: ["failure"],
+        cardOffset: -60,
         detail: `
-          <div><strong>Authors</strong>: <strong>Zeyi Xu</strong>, Yifei Li</div>
-          <div><strong>Affiliations</strong>: Shanghai University; MIT CSAIL</div>
+          <div class="section-title">Authors & Affiliations</div>
+          <p><strong>Authors</strong>: <strong>Zeyi Xu</strong>, Yifei Li</p>
+          <p><strong>Affiliations</strong>: Shanghai University; MIT CSAIL</p>
+
+          <div class="section-title">Overview</div>
+          <p>
+            <strong>Historical Message-Passing Integration Transformer (HMIT)</strong> enhances MeshGraphNet by integrating two key components:
+            <strong>HMPA</strong> and <strong>GFL</strong>.
+          </p>
+          <ul>
+            <li>
+              <strong>HMPA</strong> caches the first <em>M</em> message-passing states per node and uses feature-wise attention to alleviate over-squashing,
+              uniformly reconstructing the full spectrum at linear cost.
+            </li>
+            <li>
+              <strong>GFL</strong> projects predictions into the Laplacian eigenbasis and adaptively rescales low-frequency coefficients to correct spectral bias.
+            </li>
+          </ul>
+
+          <div class="section-title">My Contribution</div>
+          <p>
+            Throughout the research, I handled literature review, method innovation, code development and testing, experimental design, and paper writing.
+          </p>
+          <p class="meta">
+            Acknowledgement: Many thanks to
+            <a href="https://scholar.google.com/citations?user=N4ejGnoAAAAJ&hl=en" target="_blank" rel="noopener noreferrer">Yifei Li</a>
+            for guidance on research direction, overall process, and manuscript revisions.
+          </p>
+
+          <img src="file:///C:/Users/xuzey/Desktop/Zeyi_Xu-CV/HMIT.png" alt="HMIT figure" />
         `
       },
       {
-        title: "（Program）Numerical Oil Painting Simulation",
+        title: "(Program) Numerical Oil Painting Simulation",
         subtitle: "Research Intern",
         start: "2024-05-01",
         end:   "2024-09-30",
         label: "2024.5 – 2024.9",
-        color: "#34d399", // SJTU · program · 偏青绿
+        color: "#34d399", // SJTU · program
         institutions: ["SJTU"],
-        detail: "这里展示油画数值模拟项目的更多细节（占位符）。"
-      },
-      {
-        title: "（CVPR 2025）AMR-Transformer: Enabling Efficient Long-range Interaction for Complex Neural Fluid Simulation",
-        subtitle: "Research Intern",
-        start: "2024-09-01",
-        end:   "2025-03-31",
-        label: "2024.9 – 2025.3",
-        color: "#f472b6", // SJTU · paper · 中粉
-        institutions: ["SJTU"],
+        cardOffset: -70,
         detail: `
-          <div><strong>Authors</strong>:
-            <strong>Zeyi Xu*</strong>, Jinfan Liu*, Kuangxu Chen, Ye Chen, Zhangli Hu, Bingbing Ni
-          </div>
-          <div>* Co-first authors.</div>
-          <div><strong>Affiliations</strong>:
-            Shanghai Jiao Tong University; Shanghai University; Shenzhen Technology University
-          </div>
+          <div class="section-title">Scope</div>
+          <ul>
+            <li>
+              Implemented physics-simulation modules using <strong>OpenGL compute shaders</strong>.
+            </li>
+            <li>
+              Built <strong>brush splatting</strong> for pigment deposition and stroke accumulation.
+            </li>
+            <li>
+              Implemented brush dynamics via <strong>Position-Based Dynamics (PBD)</strong> (brush tip / bristle behavior).
+            </li>
+            <li>
+              Prototyped oil paint physics with both a <strong>2D height-field Navier–Stokes solver</strong> and the <strong>shallow-water equations</strong>.
+            </li>
+          </ul>
+
+          <img src="file:///C:/Users/xuzey/Desktop/Zeyi_Xu-CV/oil_painting.png" alt="Oil painting simulation result" />
         `
       },
       {
-        title: "NC paper",
+        title: "(CVPR 2025) AMR-Transformer: Enabling Efficient Long-range Interaction for Complex Neural Fluid Simulation",
+        subtitle: "Research Intern",
+        start: "2024-07-01",
+        end:   "2024-11-30",
+        label: "2024.7 – 2024.11",
+        color: "#f472b6", // SJTU · paper
+        institutions: ["SJTU"],
+        cardOffset: -70,
+        detail: `
+          <div class="section-title">Authors & Affiliations</div>
+          <p>
+            <strong>Authors</strong>:
+            <strong>Zeyi Xu*</strong>, Jinfan Liu*, Kuangxu Chen, Ye Chen, Zhangli Hu, Bingbing Ni
+          </p>
+          <p class="meta">* Co-first authors.</p>
+          <p><strong>Affiliations</strong>: Shanghai Jiao Tong University; Shanghai University; Shenzhen Technology University</p>
+
+          <div class="section-title">Project Summary</div>
+          <p>
+            By combining traditional methods with modern deep learning techniques,
+            <strong>AdaptiveMeshRefinement-Transformer (AMR-Transformer)</strong> employs an octree-based Adaptive Mesh Refinement algorithm alongside a Transformer.
+            It aims to capture long-range dependencies while adaptively adjusting the number of input tokens.
+          </p>
+
+          <div class="section-title">My Contribution</div>
+          <p>
+            Throughout the research, I handled the literature review, method innovation, part of the code development and testing,
+            experimental design, and paper writing.
+          </p>
+
+          <img src="file:///C:/Users/xuzey/Desktop/Zeyi_Xu-CV/AMRT.png" alt="AMR-Transformer figure" />
+        `
+      },
+      {
+        title: "AMR-MeshGraphNet",
+        subtitle: "Experiment",
+        start: "2024-07-01",
+        end:   "2024-09-30",
+        label: "2024.7 - 2024.9",
+        color: "#9ca3af", // Failure - ablation
+        institutions: ["failure"],
+        cardOffset: -20,
+        detail: `
+          <div class="section-title">Overview</div>
+          <p>
+            Tried pairing <strong>MeshGraphNet</strong> with the AMR token generator, but the results lagged so it ultimately served only as the <strong>AMR-Transformer</strong> ablation.
+          </p>
+        `
+      },
+      {
+        title: "Message-Passing Convolution Neural Network (MPCNN)",
+        subtitle: "Experiment",
+        start: "2024-11-01",
+        end:   "2025-01-30",
+        label: "2024.11 - 2025.1",
+        color: "#9ca3af", // Failure - experiment
+        institutions: ["failure"],
+        cardOffset: -10,
+        detail: `
+          <div class="section-title">Overview</div>
+          <p>
+            <strong>Message-Passing Convolution Neural Network (MPCNN)</strong> (with
+            <a href="https://scholar.google.com/citations?user=SMdBcsEAAAAJ&hl=en" target="_blank" rel="noopener noreferrer">Kuangxu Chen</a>)
+            integrates a cross-shaped convolution kernel with message passing to efficiently process semi-structured meshes.
+          </p>
+          <p>
+            Demonstrated superior efficiency compared to standalone CNN or GNN baselines while still exposing accuracy gaps that halted publication.
+          </p>
+        `
+      },
+      {
+        title: "Differentiable CFD Architecture",
+        subtitle: "Experiment",
+        start: "2024-12-01",
+        end:   "2025-03-30",
+        label: "2024.12 - 2025.3",
+        color: "#9ca3af", // Failure - framework
+        institutions: ["failure"],
+        cardOffset: -50,
+        detail: `
+          <div class="section-title">Overview</div>
+          <p>
+            Built a differentiable CFD architecture with
+            <a href="https://scholar.google.com/citations?user=SMdBcsEAAAAJ&hl=en" target="_blank" rel="noopener noreferrer">Kuangxu Chen</a>
+            and
+            <a href="https://scholar.google.com/citations?user=N4ejGnoAAAAJ&hl=en" target="_blank" rel="noopener noreferrer">Yifei Li</a>
+            to simulate compressible fluids on 2D unstructured meshes.
+          </p>
+          <p>
+            Implemented the solver in <strong>PyTorch</strong> so gradients flow through time marching, enabling supersonic fluid parameter optimization.
+          </p>
+        `
+      },
+      {
+        title: "(Unpublished) One-shot Learning of Optimal Adaptive Meshes for Compressible Flows",
         subtitle: "Paper",
         start: "2025-03-01",
-        end:   "2025-12-31",
+        end:   "2025-12-30",
         label: "2025.3 – 2025.12",
-        color: "#ec4899", // NC · paper · 玫红（和 meshy 明显区分）
-        institutions: [],
-        detail: "这里展示 NC 论文项目的更多细节（占位符）。"
+        color: "#ec4899", // Multi-institution · paper
+        institutions: ["Iowa State University"],
+        cardOffset: -120,
+        detail: `
+          <div class="section-title">Authors</div>
+          <p>
+            <strong>Zeyi Xu*</strong>, <strong>Jinfan Liu*</strong>, Ligong Han, Kuangxu Chen&#8224;, Han Gao&#8224;
+          </p>
+          <p class="meta">* Co-first authors. &#8224; Corresponding authors.</p>
+          <div class="section-title">Affiliations</div>
+          <ul>
+            <li>Department of Aerospace Engineering, Iowa State University, Ames, Iowa 50011, USA</li>
+            <li>Shanghai Jiao Tong University, Shanghai 200240, China</li>
+            <li>MIT-IBM Watson AI Lab, Cambridge, MA 02142, USA</li>
+            <li>College of Engineering Physics, Shenzhen Technology University, Shenzhen 518118, China</li>
+          </ul>
+
+          <div class="section-title">Status</div>
+          <p>Unpublished (will be released after publication).</p>
+
+          <img src="file:///C:/Users/xuzey/Desktop/Zeyi_Xu-CV/AR-PI_Transformer_KH.png" alt="Adaptive mesh figure" />
+        `
       },
       {
-        title: "（Program）Robot Indoor Navigation",
+        title: "(Program) Robot Indoor Navigation",
         subtitle: "Algorithm Intern · Research Assistant",
         start: "2025-07-01",
-        end:   "2025-10-31",
+        end:   "2025-10-30",
         label: "2025.7 – 2025.10",
-        color: "#84cc16", // TranscEngram/HKU · program · 黄绿色
+        color: "#84cc16", // TranscEngram/HKU · program
         institutions: ["TranscEngram", "HKU"],
-        detail: "这里展示在 TranscEngram 与 HKU 之间共同推进的室内导航项目细节（占位符）。"
+        cardOffset: -55,
+        detail: `
+          <div class="section-title">Patent Projects</div>
+          <ul>
+            <li>
+              <strong>Embodied intelligence memory navigation system powered by LLM reasoning</strong> — First inventor.
+            </li>
+            <li>
+              <strong>Graph‑Guided Navigation CoT</strong>:
+              an image-guided, hierarchical, event-driven Chain-of-Thought navigation method and system — First inventor.
+            </li>
+          </ul>
+        `
       },
       {
-        title: "（ICLR 2026）Neural Modular Physics for Elastic Simulation",
+        title: "(Under Review) Neural Modular Physics for Elastic Simulation",
         subtitle: "Remote Intern",
         start: "2025-09-01",
         end:   "2025-11-30",
         label: "2025.9 – 2025.11",
-        color: "#db2777", // MIT · paper · 更深一点的玫红
+        color: "#db2777", // MIT · paper
         institutions: ["MIT"],
+        cardOffset: -30,
         detail: `
-          <div><strong>Authors</strong>:
-            Yifei Li, Haixu Wu, <strong>Zeyi Xu</strong>, Tuur Stuyck, Wojciech Matusik
-          </div>
-          <div><strong>Affiliations</strong>:
-            MIT CSAIL; Shanghai University
-          </div>
+          <div class="section-title">Authors & Affiliations</div>
+          <p><strong>Authors</strong>: Yifei Li, Haixu Wu, <strong>Zeyi Xu</strong>, Tuur Stuyck, Wojciech Matusik</p>
+          <p><strong>Affiliations</strong>: MIT CSAIL; Shanghai University</p>
+
+          <div class="section-title">My Contribution</div>
+          <p>
+            Responsible for the experimental baselines, including implementation, benchmarking, and performance comparisons across competing methods.
+          </p>
+
+          <img src="file:///C:/Users/xuzey/Desktop/Zeyi_Xu-CV/NMP.png" alt="Neural Modular Physics figure" />
         `
       },
       {
-        title: "（Program）AI rigging & skinning",
+        title: "(Program) AI Rigging & Skinning",
         subtitle: "Research Scientist Intern",
         start: "2025-09-01",
         end:   "2025-12-01",
         label: "2025.9 – 2025.12",
-        color: "#22c55e", // meshy · program · 中绿
+        color: "#22c55e", // meshy · program
         institutions: ["meshy"],
-        detail: "这里展示 meshy AI rigging & skinning 项目的更多细节（占位符）。"
+        cardOffset: -20,
+        detail: `
+          <div class="section-title">Scope</div>
+          <ul>
+            <li>Trained an auto-rigging model for humanoid meshes (skeleton binding).</li>
+            <li>Trained a skinning / weight-binding model that generalizes to arbitrary meshes.</li>
+            <li>Designed a pipeline to infer skeletons from videos and support downstream rigging.</li>
+          </ul>
+        `
       },
       {
-        title: "（Program）Low Poly Generation",
+        title: "(Program) Mesh Generation",
         subtitle: "Research Scientist Intern",
         start: "2025-12-01",
         end:   null,
         label: "2025.12 – present",
-        color: "#16a34a", // meshy · program · 稍深
+        color: "#16a34a", // meshy · program
         institutions: ["meshy"],
-        detail: "这里展示 meshy Low Poly Generation 项目的更多细节（占位符）。"
+        cardOffset: -20,
+        detail: `
+          <div class="section-title">Note</div>
+          <p>Details are confidential at this time.</p>
+        `
       },
       {
-        title: "（Program）GPU parallel adaptive octree mesh extraction",
+        title: "(Program) GPU Parallel Adaptive Octree Mesh Extraction",
         subtitle: "Research Scientist Intern",
         start: "2025-12-01",
         end:   null,
         label: "2025.12 – present",
-        color: "#15803d", // meshy · program · 最深
+        color: "#15803d", // meshy · program
         institutions: ["meshy"],
-        detail: "这里展示 meshy GPU 并行自适应八叉树网格抽取项目的更多细节（占位符）。"
+        detail: `
+          <div class="section-title">What I Built</div>
+          <p>
+            Implemented GPU-parallel adaptive octree mesh extraction in <strong>PyTorch</strong>, based on
+            <em>Unconstrained Isosurface Extraction on Arbitrary Octrees</em>.
+          </p>
+          <ul>
+            <li>
+              On a workload with <strong>2.0M leaves</strong>, <strong>1.2M vertices</strong>, and <strong>3.2M faces</strong>,
+              runtime dropped from ~<strong>20s</strong> (original C++ implementation) to ~<strong>1.5s</strong>.
+            </li>
+          </ul>
+
+          <img src="file:///C:/Users/xuzey/Desktop/Zeyi_Xu-CV/ISO.png" alt="Isosurface extraction visualization" />
+        `
       }
     ];
+
+    const detailHeights = [];
+    const detailPanelBottomOffset = -180; // positive pushes up, negative allows lower
+    function extractDetailBody(content) {
+      const temp = document.createElement("div");
+      temp.innerHTML = content || "";
+      let mediaHtml = "";
+      const img = temp.querySelector("img");
+      if (img) {
+        mediaHtml = img.outerHTML;
+        img.remove();
+      }
+      return {
+        text: temp.innerHTML,
+        media: mediaHtml
+      };
+    }
+
+    function buildDetailHtml(e) {
+      const subtitleText = (e.institutions && e.institutions.length)
+        ? e.institutions.join(" / ")
+        : e.subtitle;
+      const bodyContent = e.detail || "More details are available upon request.";
+      const parts = extractDetailBody(bodyContent);
+
+      return `
+        <div class="detail-title">${e.title}</div>
+        <div class="detail-subtitle">${subtitleText}</div>
+        <div class="detail-dates">${e.label}</div>
+        <div class="detail-body">
+          <div class="detail-body-text">${parts.text}</div>
+        </div>
+      `;
+    }
+
+    function measureDetailHeights() {
+      const temp = document.createElement("div");
+      temp.className = "detail-floating";
+      temp.style.visibility = "hidden";
+      temp.style.pointerEvents = "none";
+      temp.style.opacity = "0";
+      temp.style.position = "absolute";
+      temp.style.left = "-9999px";
+      temp.style.top = "0";
+      temp.style.transform = "none";
+      document.body.appendChild(temp);
+
+      events.forEach((e, idx) => {
+        temp.innerHTML = buildDetailHtml(e);
+        detailHeights[idx] = temp.offsetHeight;
+      });
+
+      document.body.removeChild(temp);
+    }
 
     function parseDate(dateStr) {
       return new Date(dateStr + "T00:00:00");
@@ -424,9 +693,7 @@
 
     function hexToRgba(hex, alpha) {
       let c = hex.replace("#", "");
-      if (c.length === 3) {
-        c = c.split("").map(ch => ch + ch).join("");
-      }
+      if (c.length === 3) c = c.split("").map(ch => ch + ch).join("");
       const num = parseInt(c, 16);
       const r = (num >> 16) & 255;
       const g = (num >> 8) & 255;
@@ -462,21 +729,31 @@
       const e = renderedEvents.find(ev => ev.eventId === eventId);
       if (!e) return;
 
+      panel.innerHTML = buildDetailHtml(e);
       panel.style.opacity = "1";
       panel.style.borderColor = hexToRgba(e.color, 0.8);
       panel.style.backgroundColor = hexToRgba(e.color, 0.08);
       panel.style.left = e.detailLeft + "px";
-      panel.style.top = e.detailTop + "px";
-      panel.innerHTML = `
-        <div class="detail-title">${e.title}</div>
-        <div class="detail-subtitle">${
-          (e.institutions && e.institutions.length)
-            ? e.institutions.join(" · ")
-            : e.subtitle
-        }</div>
-        <div class="detail-dates">${e.label}</div>
-        <div class="detail-body">${e.detail || "这里展示该项目的更多细节（占位符）。"}</div>
-      `;
+
+      const wrapper = document.querySelector(".timeline-wrapper");
+      const panelHeight = panel.offsetHeight;
+      let topPosition = e.detailTop;
+
+      if (wrapper && panelHeight) {
+        const wrapperHeight = parseFloat(wrapper.dataset.timelineHeight) || wrapper.offsetHeight;
+        const margin = 24;
+        const halfHeight = panelHeight / 2;
+        const minTop = margin + halfHeight;
+        const maxTop = wrapperHeight - margin - halfHeight - detailPanelBottomOffset;
+
+        if (minTop <= maxTop) {
+          topPosition = Math.min(Math.max(e.detailTop, minTop), maxTop);
+        } else {
+          topPosition = wrapperHeight / 2;
+        }
+      }
+
+      panel.style.top = topPosition + "px";
     }
 
     function applyActive(eventId) {
@@ -525,19 +802,21 @@
       renderedEvents = [];
       currentActiveId = null;
       updateDetailPanel(null);
+      measureDetailHeights();
 
       const now = new Date();
       const nowMonthIndex = monthIndexFromDate(now);
+      const ongoingPadUnits = 3;
 
-      // 解析事件并用“月份格子”描述
+      // Parse events and represent them in month units
       const parsed = events.map((e, idx) => {
         const startDate = parseDate(e.start);
         const endDate = e.end ? parseDate(e.end) : now;
         const isOngoing = !e.end;
 
         const startMonth = monthIndexFromDate(startDate); // inclusive
-        const endMonthBase = monthIndexFromDate(endDate); // 对应 label 的月份
-        const endUnit = isOngoing ? nowMonthIndex + 1 : endMonthBase; // ongoing 多占一格
+        const endMonthBase = monthIndexFromDate(endDate);
+        const endUnit = isOngoing ? nowMonthIndex + 1 + ongoingPadUnits : endMonthBase; // ongoing takes extra space
 
         return {
           ...e,
@@ -548,7 +827,8 @@
           endMonthBase,
           startUnit: startMonth,
           endUnit,
-          index: idx
+          index: idx,
+          detailHeight: detailHeights[idx] || 0
         };
       });
 
@@ -562,23 +842,42 @@
       );
 
       const wrapper = container.parentElement;
-      const height = wrapper.offsetHeight;
-      const topPadding = 30;
-      const bottomPadding = 30;
+      const pixelsPerUnit = 36;
+      const baseTopPadding = -260;
+      const baseBottomPadding = -400;
+      const maxDetailHeight = parsed.reduce(
+        (acc, e) => Math.max(acc, e.detailHeight || 0),
+        0
+      );
+      const detailVerticalMargin = 24;
+      const fallbackDetailHeight = 280;
+      const measuredHalf = maxDetailHeight ? maxDetailHeight / 2 : 0;
+      const detailHalfSpan = Math.max(measuredHalf, fallbackDetailHeight / 2) + detailVerticalMargin;
+
+      const totalUnits = maxUnit - minUnit || 1;
+      const baseSpan = totalUnits * pixelsPerUnit;
+      const topPadding = baseTopPadding + detailHalfSpan;
+      const bottomPadding = baseBottomPadding + detailHalfSpan;
+      const computedHeight = topPadding + bottomPadding + baseSpan;
+      wrapper.style.height = computedHeight + "px";
+      wrapper.dataset.timelineHeight = computedHeight;
+
+      const height = wrapper.offsetHeight || computedHeight;
       const usableHeight = height - topPadding - bottomPadding;
 
       const axisX = container.offsetWidth / 2;
-
-      const totalUnits = maxUnit - minUnit || 1;
       function mapUnitToY(unit) {
         const ratio = (unit - minUnit) / totalUnits;
         return topPadding + ratio * usableHeight;
       }
 
-      // ===== 时间刻度：每月 + 每年 =====
+      // Timeline ticks: monthly + yearly
       const minMonthIdx = minUnit;
       const maxMonthIdxForTicks = parsed.reduce(
-        (acc, e) => Math.max(acc, e.endMonthBase),
+        (acc, e) => {
+          const endpoint = e.isOngoing ? e.endUnit : e.endMonthBase;
+          return Math.max(acc, endpoint);
+        },
         parsed[0].endMonthBase
       );
 
@@ -586,6 +885,7 @@
         const y = mapUnitToY(idx);
         const month = monthFromMonthIndex(idx);
         const year = yearFromMonthIndex(idx);
+        if (year >= 2026 && month !== 0) continue;
 
         const tick = document.createElement("div");
         tick.className = "time-tick event-piece";
@@ -608,17 +908,18 @@
         container.appendChild(tick);
       }
 
-      // ===== 根据月份格子计算每条 timeline 的上下端（严格按格子，不再拉伸） =====
+      // Compute vertical positions from month units
       parsed.forEach(e => {
         const top = mapUnitToY(e.startUnit);
         const bottom = mapUnitToY(e.endUnit);
         e.lineTop = top;
         e.lineBottom = bottom;
         e.lineHeight = bottom - top;
-        e.centerRaw = (top + bottom) / 2;
+        const manualShift = e.cardOffset || 0;
+        e.centerRaw = (top + bottom) / 2 + manualShift;
       });
 
-      // ===== 日期 label 文本 + jitter，防止 pill 重叠 =====
+      // Date label text and jitter to reduce overlap for identical labels
       parsed.forEach(e => {
         e.startLabelText = formatDateLabel(e.startDate);
         e.endLabelText = e.isOngoing ? "present" : formatDateLabel(e.endDate);
@@ -637,15 +938,12 @@
         if (group.length <= 1) return;
         group.forEach((entry, index) => {
           const offset = (index - (group.length - 1) / 2) * jitter;
-          if (entry.type === "start") {
-            entry.event.startLabelOffsetY = offset;
-          } else {
-            entry.event.endLabelOffsetY = offset;
-          }
+          if (entry.type === "start") entry.event.startLabelOffsetY = offset;
+          else entry.event.endLabelOffsetY = offset;
         });
       });
 
-      // ===== 卡片中心去重，避免互相压住 =====
+      // De-overlap card centers
       const labelInfos = parsed
         .map(e => ({ index: e.index, centerRaw: e.centerRaw }))
         .sort((a, b) => a.centerRaw - b.centerRaw);
@@ -654,14 +952,12 @@
       let lastY = -Infinity;
       labelInfos.forEach(info => {
         let y = info.centerRaw;
-        if (y - lastY < minGap) {
-          y = lastY + minGap;
-        }
+        if (y - lastY < minGap) y = lastY + minGap;
         parsed[info.index].labelCenter = y;
         lastY = y;
       });
 
-      // 左右交替排卡片
+      // Alternate sides (left/right)
       parsed.forEach((e, idx) => {
         e.side = idx % 2 === 0 ? "left" : "right";
       });
@@ -669,10 +965,10 @@
       const cardWidth = 260;
       const gap = 40;
       const dateLabelOffset = 20;
-      const detailWidth = 260;
-      const detailGap = 80;
+      const detailWidth = 420;
+      const detailGap = 24;
 
-      // ===== 渲染每个 event =====
+      // Render each event
       parsed.forEach((e, idx) => {
         const eventId = "e-" + idx;
         e.eventId = eventId;
@@ -681,7 +977,7 @@
         const lineClusterOffset = (idx - (parsed.length - 1) / 2) * 6;
         const lineX = axisX + lineClusterOffset;
 
-        // 线段
+        // Line segment
         const line = document.createElement("div");
         line.className = "event-line-core event-piece";
         line.style.setProperty("--color", e.color);
@@ -691,29 +987,33 @@
         line.dataset.eventId = eventId;
         container.appendChild(line);
 
-        // 起点日期 pill
+        // Start date pill
         const startLabelY = e.lineTop + (e.startLabelOffsetY || 0);
         const startLabel = document.createElement("div");
         startLabel.className = "date-label event-piece";
         startLabel.textContent = e.startLabelText;
-        startLabel.style.left = (lineX + dateLabelOffset) + "px";
+        const startLabelOnRight = e.side === "left";
+        const startLabelX = startLabelOnRight ? lineX + dateLabelOffset : lineX - dateLabelOffset;
+        startLabel.style.left = startLabelX + "px";
         startLabel.style.top = startLabelY + "px";
-        startLabel.style.transform = "translateY(-50%)";
+        startLabel.style.transform = startLabelOnRight ? "translateY(-50%)" : "translate(-100%, -50%)";
         startLabel.dataset.eventId = eventId;
         container.appendChild(startLabel);
 
-        // 终点日期 pill
+        // End date pill
         const endLabelY = e.lineBottom + (e.endLabelOffsetY || 0);
         const endLabel = document.createElement("div");
         endLabel.className = "date-label event-piece";
         endLabel.textContent = e.endLabelText;
-        endLabel.style.left = (lineX + dateLabelOffset) + "px";
+        const endLabelOnRight = e.side === "left";
+        const endLabelX = endLabelOnRight ? lineX + dateLabelOffset : lineX - dateLabelOffset;
+        endLabel.style.left = endLabelX + "px";
         endLabel.style.top = endLabelY + "px";
-        endLabel.style.transform = "translateY(50%)";
+        endLabel.style.transform = endLabelOnRight ? "translateY(50%)" : "translate(-100%, 50%)";
         endLabel.dataset.eventId = eventId;
         container.appendChild(endLabel);
 
-        // 卡片
+        // Summary card
         const card = document.createElement("div");
         card.className = "event-card event-piece";
         card.style.setProperty("--color", e.color);
@@ -722,17 +1022,15 @@
         card.style.top = e.labelCenter + "px";
 
         let cardLeft;
-        if (e.side === "left") {
-          cardLeft = axisX - gap - cardWidth;
-        } else {
-          cardLeft = axisX + gap;
-        }
+        if (e.side === "left") cardLeft = axisX - gap - cardWidth;
+        else cardLeft = axisX + gap;
+
         card.style.left = cardLeft + "px";
         card.dataset.eventId = eventId;
         e.cardLeft = cardLeft;
         e.cardWidth = cardWidth;
 
-        // 机构徽标
+        // Institution pills
         if (e.institutions && e.institutions.length) {
           const instRow = document.createElement("div");
           instRow.className = "event-institutions";
@@ -764,7 +1062,7 @@
         card.appendChild(datesEl);
         container.appendChild(card);
 
-        // 虚线
+        // Leader line
         const leader = document.createElement("div");
         leader.className = "leader-line event-piece";
         leader.style.setProperty("--color", e.color);
@@ -788,16 +1086,13 @@
           leader.style.left = leaderLeft + "px";
           leader.style.width = (leaderRight - leaderLeft) + "px";
         }
-
         container.appendChild(leader);
 
-        // 浮动详情框的位置：永远在卡片更外侧
+        // Floating detail panel placement (always outside the card)
         let detailLeft;
-        if (e.side === "left") {
-          detailLeft = cardLeft - detailWidth - detailGap;
-        } else {
-          detailLeft = cardLeft + cardWidth + detailGap;
-        }
+        if (e.side === "left") detailLeft = cardLeft - detailWidth - detailGap;
+        else detailLeft = cardLeft + cardWidth + detailGap;
+
         e.detailLeft = detailLeft;
         e.detailTop = e.labelCenter;
       });
